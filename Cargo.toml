@@ -1,0 +1,30 @@
+[package]
+name = "apalis-nats"
+version = "0.1.0-alpha.1"
+edition = "2024"
+authors = ["Njuguna Mureithi <mureithinjuguna@gmail.com>"]
+repository = "https://github.com/apalis-dev/apalis-nats"
+license-file = "LICENSE"
+description = "Background task processing for rust using apalis and nats jetstream"
+readme = "README.md"
+homepage = "https://github.com/apalis-dev/apalis-nats"
+documentation = "https://docs.rs/apalis-nats"
+keywords = ["apalis", "nats", "messages", "queue", "worker"]
+categories = ["asynchronous", "database", "network-programming"]
+
+[dependencies]
+apalis-core = { version = "1.0.0-rc.3", default-features = false, features = [
+    "sleep",
+] }
+apalis-codec = { version = "0.1.0-rc.3", default-features = false, features = [
+    "json",
+] }
+async-nats = { version = "0.46.0", features = [
+    "jetstream",
+], default-features = false }
+futures = "0.3.31"
+thiserror = "2.0.18"
+
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
