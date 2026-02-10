@@ -15,13 +15,6 @@ jobs:
   test:
     name: Test Suite
     runs-on: ${{ matrix.os }}
-    services:
-      jetstream:
-        image: nats
-        options: >-
-          -js
-        ports:
-          - 4222:4222
 
     strategy:
       matrix:
@@ -50,6 +43,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-
+
+      - name: Start NATS JetStream
+        run: |
+          docker run -d \
+            --name jetstream \
+            -p 4222:4222 \
+            nats:latest -js
 
       - name: Run cargo test with all features
         run: cargo test --all-features --verbose -- --test-threads=1
