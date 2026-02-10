@@ -16,11 +16,13 @@ jobs:
     name: Test Suite
     runs-on: ${{ matrix.os }}
     services:
-      postgres:
+      jetstream:
         image: nats
+        options: >-
+          --js
         ports:
           - 4222:4222
-          
+
     strategy:
       matrix:
         os: [ubuntu-latest]
