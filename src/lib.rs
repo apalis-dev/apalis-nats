@@ -1,3 +1,4 @@
+#![doc = include_str!("../README.md")]
 use std::marker::PhantomData;
 
 use apalis_codec::json::JsonCodec;
@@ -25,8 +26,8 @@ pub type JetStreamTask<Args> = Task<Args, JetStreamContext, i64>;
 
 #[derive(Debug, Clone, Default)]
 pub struct Config {
-    stream: stream::Config,
-    consumer: jetstream::consumer::pull::Config,
+    pub stream: stream::Config,
+    pub consumer: jetstream::consumer::pull::Config,
 }
 
 #[derive(Debug, Default, Clone)]

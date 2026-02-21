@@ -25,7 +25,9 @@ docker run -p 4222:4222 nats -js
 ```rust,no_run
 use apalis::prelude::*;
 use apalis_nats::*;
-use futures::stream::{self, StreamExt, SinkExt};
+use futures::{self, SinkExt};
+use std::env;
+use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() {
