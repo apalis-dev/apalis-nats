@@ -1,13 +1,12 @@
 use apalis::prelude::*;
 use apalis_nats::*;
 use futures::{self, SinkExt};
-use std::env;
 use std::collections::HashMap;
+use std::env;
 
 #[tokio::main]
 async fn main() {
-    let nats_url = env::var("NATS_URL")
-        .unwrap_or_else(|_| "nats://localhost:4222".to_string());
+    let nats_url = env::var("NATS_URL").unwrap_or_else(|_| "nats://localhost:4222".to_string());
 
     let client = async_nats::connect(nats_url).await.unwrap();
 
