@@ -16,7 +16,7 @@ categories = ["asynchronous", "database", "network-programming"]
 apalis-core = { version = "1.0.0-rc.4", default-features = false, features = [
     "sleep",
 ] }
-apalis-codec = { version = "0.1.0-rc.4", default-features = false, features = [
+apalis-codec = { version = "0.1.0-rc.6", default-features = false, features = [
     "json",
 ] }
 async-nats = { version = "0.46.0", features = [
