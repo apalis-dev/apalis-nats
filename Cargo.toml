@@ -13,7 +13,7 @@ keywords = ["apalis", "nats", "messages", "queue", "worker"]
 categories = ["asynchronous", "database", "network-programming"]
 
 [dependencies]
-apalis-core = { version = "1.0.0-rc.4", default-features = false, features = [
+apalis-core = { version = "1.0.0-rc.6", default-features = false, features = [
     "sleep",
 ] }
 apalis-codec = { version = "0.1.0-rc.4", default-features = false, features = [
