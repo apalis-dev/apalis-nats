@@ -36,8 +36,7 @@ async fn main() {
 
     let client = async_nats::connect(nats_url).await.unwrap();
 
-    let mut config = Config::default();
-    config.stream.name = "events".to_owned();
+    let config = Config::new("events").with_pull_consumer();
     let mut backend = NatsJetStream::new(client, config).await;
 
     backend.send(Task::new(HashMap::new())).await.unwrap();
@@ -65,11 +64,11 @@ Track your messages using [apalis-board](https://github.com/apalis-dev/apalis-bo
 ## Roadmap
 
 - [x] Pull Consumer
-- [ ] Push Consumer
+- [x] Push Consumer
 - [ ] Shared Fetcher (Multiple queues on the same Context)
 - [x] Sink
-- [ ] BackendExt
-- [ ] Worker heartbeats
+- [x] BackendExt
+- [x] Worker heartbeats
 - [ ] Workflow support
 - [ ] Extensive Docs
 

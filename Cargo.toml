@@ -13,10 +13,10 @@ keywords = ["apalis", "nats", "messages", "queue", "worker"]
 categories = ["asynchronous", "database", "network-programming"]
 
 [dependencies]
-apalis-core = { version = "1.0.0-rc.4", default-features = false, features = [
+apalis-core = { version = "1.0.0-rc.6", default-features = false, features = [
     "sleep",
 ] }
-apalis-codec = { version = "0.1.0-rc.4", default-features = false, features = [
+apalis-codec = { version = "0.1.0-rc.6", default-features = false, features = [
     "json",
 ] }
 async-nats = { version = "0.46.0", features = [
@@ -24,8 +24,9 @@ async-nats = { version = "0.46.0", features = [
 ], default-features = false }
 futures = "0.3.31"
 thiserror = "2.0.18"
+ulid = { version = "1", features = ["serde"] }
 
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-apalis = "1.0.0-rc.4"
+apalis = "1.0.0-rc.6"

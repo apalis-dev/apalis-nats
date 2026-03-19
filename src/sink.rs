@@ -1,26 +1,35 @@
+use apalis_core::{backend::codec::Codec, error::BoxDynError};
+use async_nats::jetstream::{
+    self,
+    consumer::{Consumer, IntoConsumerConfig},
+    message::PublishMessage,
+};
+use futures::{
+    FutureExt, Sink,
+    future::{BoxFuture, Shared},
+};
 use std::{
     collections::VecDeque,
     marker::PhantomData,
     pin::Pin,
+    sync::Arc,
     task::{Context, Poll},
 };
 
-use apalis_core::backend::codec::Codec;
-use async_nats::jetstream::{self};
-use futures::{FutureExt, Sink, future::BoxFuture};
+use crate::{
+    Config, JetStreamTask, NatsJetStream, consumer::IntoMessageStream, error::JetStreamError,
+};
 
-use crate::{Config, JetStreamTask, NatsJetStream, error::JetStreamError};
-
-pub struct JetStreamSink<T, C> {
+pub struct JetStreamSink<T, Encode, C> {
     context: jetstream::Context,
-    config: Config,
+    config: Config<C>,
     items: VecDeque<JetStreamTask<T>>,
     pending_sends: VecDeque<PendingSend>,
-    _codec: std::marker::PhantomData<C>,
+    _codec: std::marker::PhantomData<Encode>,
 }
 
-impl<T, C> JetStreamSink<T, C> {
-    pub fn new(context: jetstream::Context, config: Config) -> Self {
+impl<T, Encode, C> JetStreamSink<T, Encode, C> {
+    pub fn new(context: jetstream::Context, config: Config<C>) -> Self {
         Self {
             context,
             config,
@@ -31,7 +40,7 @@ impl<T, C> JetStreamSink<T, C> {
     }
 }
 
-impl<T, C> Clone for JetStreamSink<T, C> {
+impl<T, Encode, C: Clone> Clone for JetStreamSink<T, Encode, C> {
     fn clone(&self) -> Self {
         Self {
             context: self.context.clone(),
@@ -44,29 +53,34 @@ impl<T, C> Clone for JetStreamSink<T, C> {
 }
 
 struct PendingSend {
-    future: BoxFuture<'static, Result<(), JetStreamError>>,
+    future: Shared<BoxFuture<'static, Result<(), Arc<BoxDynError>>>>,
 }
 
-impl<T, C> Sink<JetStreamTask<T>> for NatsJetStream<T, C>
+impl<T, Encode, C, PollErr> Sink<JetStreamTask<T>> for NatsJetStream<T, Encode, C>
 where
     T: Send + 'static + Unpin,
-    C: Codec<T, Compact = Vec<u8>> + Unpin,
-    C::Error: std::error::Error + Send + Sync + 'static,
+    Encode: Codec<T, Compact = Vec<u8>> + Unpin,
+    Encode::Error: std::error::Error + Send + Sync + 'static,
+    C: IntoConsumerConfig + Unpin,
+    Consumer<C>: IntoMessageStream<Error = PollErr>,
+    PollErr: Send + 'static,
 {
-    type Error = JetStreamError;
+    type Error = JetStreamError<PollErr>;
 
     fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         let this = &mut self.get_mut().sink;
 
         // Poll pending sends
         while let Some(pending) = this.pending_sends.front_mut() {
-            match pending.future.as_mut().poll(cx) {
+            match pending.future.poll_unpin(cx) {
                 Poll::Ready(Ok(_msg_ids)) => {
                     this.pending_sends.pop_front();
                 }
                 Poll::Ready(Err(e)) => {
                     this.pending_sends.pop_front();
-                    return Poll::Ready(Err(e));
+                    return Poll::Ready(Err(JetStreamError::SinkError(
+                        Arc::into_inner(e).unwrap(),
+                    )));
                 }
                 Poll::Pending => {
                     return Poll::Pending;
@@ -92,14 +106,21 @@ where
         while let Some(item) = this.items.pop_front() {
             let queue_name = this.config.stream.name.clone();
             let bytes =
-                C::encode(&item.args).map_err(|e| JetStreamError::ParseError(Box::new(e)))?;
+                Encode::encode(&item.args).map_err(|e| JetStreamError::ParseError(Box::new(e)))?;
             let headers = item.parts.ctx.headers.unwrap_or_default();
+            let mut publish = PublishMessage::build()
+                .payload(bytes.into())
+                .headers(headers);
+            if let Some(task_id) = item.parts.task_id {
+                publish = publish.message_id(task_id.inner().to_string());
+            }
             let conn = this.context.clone();
-            let fut = async move {
+
+            let fut: BoxFuture<'static, Result<(), BoxDynError>> = async move {
                 let _ = conn
-                    .publish_with_headers(queue_name, headers, bytes.into())
+                    .send_publish(queue_name, publish)
                     .await
-                    .map_err(|e| JetStreamError::PublishError(e))?;
+                    .map_err(BoxDynError::from)?;
                 Ok(())
             }
             .boxed();
@@ -112,20 +133,23 @@ where
                 futures::future::try_join_all(messages).await?;
                 Ok(())
             }
-            .boxed();
+            .boxed()
+            .shared();
 
             this.pending_sends.push_back(PendingSend { future });
         }
 
         // Now poll all pending sends
         while let Some(pending) = this.pending_sends.front_mut() {
-            match pending.future.as_mut().poll(cx) {
+            match pending.future.poll_unpin(cx) {
                 Poll::Ready(Ok(_)) => {
                     this.pending_sends.pop_front();
                 }
                 Poll::Ready(Err(e)) => {
                     this.pending_sends.pop_front();
-                    return Poll::Ready(Err(e));
+                    return Poll::Ready(Err(JetStreamError::SinkError(
+                        Arc::into_inner(e).unwrap(),
+                    )));
                 }
                 Poll::Pending => {
                     return Poll::Pending;

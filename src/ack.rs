@@ -1,36 +1,46 @@
 use std::fmt::Debug;
 
 use apalis_core::{error::BoxDynError, task::Parts, worker::ext::ack::Acknowledge};
+use async_nats::{
+    Subject,
+    jetstream::consumer::{Consumer, IntoConsumerConfig},
+};
 use futures::{
     FutureExt,
     future::{self, BoxFuture},
 };
+use ulid::Ulid;
 
-use crate::{JetStreamContext, NatsJetStream, error::JetStreamError};
+use crate::{JetStreamContext, NatsJetStream, consumer::IntoMessageStream, error::JetStreamError};
 
-impl<T, C, Res> Acknowledge<Res, JetStreamContext, i64> for NatsJetStream<T, C>
+impl<T, Decode, Res, C, PollErr> Acknowledge<Res, JetStreamContext, Ulid>
+    for NatsJetStream<T, Decode, C>
 where
     T: Send,
     Res: Debug + Send + Sync,
-    C: Send,
+    Decode: Send,
+    C: IntoConsumerConfig,
+    Consumer<C>: IntoMessageStream<Error = PollErr>,
+    PollErr: Send + 'static,
 {
-    type Error = JetStreamError;
+    type Error = JetStreamError<PollErr>;
 
     type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     fn ack(
         &mut self,
         res: &Result<Res, BoxDynError>,
-        parts: &Parts<JetStreamContext, i64>,
+        parts: &Parts<JetStreamContext, Ulid>,
     ) -> Self::Future {
-        let reply = parts.ctx.reply.clone().unwrap();
+        let reply: Subject = parts.ctx.reply.clone().expect("Missing ack subject");
         let client = self.client.clone();
         if res.is_ok() {
             let fut = async move {
                 client
                     .publish(reply, "".into())
                     .await
-                    .map_err(JetStreamError::AckError)
+                    .map_err(JetStreamError::AckError)?;
+                Ok(())
             };
             return fut.boxed();
         }
