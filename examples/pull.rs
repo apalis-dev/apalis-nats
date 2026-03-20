@@ -10,8 +10,10 @@ async fn main() {
 
     let client = async_nats::connect(nats_url).await.unwrap();
 
-    let mut config = Config::default();
-    config.stream.name = "events".to_owned();
+    let config = Config::new("pull::messages")
+        .with_pull_consumer()
+        .durable()
+        .with_max_ack_pending(1);
     let mut backend = NatsJetStream::new(client, config).await;
 
     backend.send(Task::new(HashMap::new())).await.unwrap();

@@ -1,25 +1,16 @@
 use apalis_core::error::BoxDynError;
 use async_nats::{
-    client::PublishErrorKind,
+    client::{FlushErrorKind, PublishErrorKind},
     error::Error,
-    jetstream::{
-        self,
-        consumer::{StreamError, pull::MessagesErrorKind},
-        context::CreateStreamError,
-        stream::ConsumerError,
-    },
+    jetstream::{consumer::StreamError, context::CreateStreamError, stream::ConsumerError},
 };
-
-pub type JetStreamMessageError = Error<MessagesErrorKind>;
 
 pub type AckError = Error<PublishErrorKind>;
 
-pub type PublishError = Error<jetstream::context::PublishErrorKind>;
-
 #[derive(Debug, thiserror::Error)]
-pub enum JetStreamError {
+pub enum JetStreamError<PollErr> {
     #[error("PollError: {0}")]
-    PollError(JetStreamMessageError),
+    PollError(PollErr),
 
     #[error("ConsumerError: {0}")]
     ConsumerError(ConsumerError),
@@ -36,6 +27,9 @@ pub enum JetStreamError {
     #[error("AckError: {0}")]
     AckError(AckError),
 
-    #[error("PublishError: {0}")]
-    PublishError(PublishError),
+    #[error("SinkError: {0}")]
+    SinkError(BoxDynError),
+
+    #[error("FlushError: {0}")]
+    FlushError(Error<FlushErrorKind>),
 }

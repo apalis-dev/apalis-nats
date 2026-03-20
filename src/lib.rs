@@ -1,34 +1,35 @@
 #![doc = include_str!("../README.md")]
-use std::marker::PhantomData;
-
 use apalis_codec::json::JsonCodec;
 use apalis_core::{
-    backend::{Backend, TaskStream, codec::Codec},
-    task::Task,
+    backend::{Backend, BackendExt, TaskStream, codec::Codec, queue::Queue},
+    task::{Task, task_id::TaskId},
     worker::{context::WorkerContext, ext::ack::AcknowledgeLayer},
 };
 use async_nats::{
-    Client, HeaderMap, StatusCode, Subject,
-    jetstream::{self, consumer::PullConsumer, stream},
+    Client, HeaderMap, StatusCode, Subject, header,
+    jetstream::{
+        self,
+        consumer::{Consumer, FromConsumer, IntoConsumerConfig},
+    },
 };
 use futures::{
     StreamExt, TryStreamExt,
-    stream::{BoxStream, once},
+    stream::{self, BoxStream, once},
+};
+use std::marker::PhantomData;
+use ulid::Ulid;
+
+pub use crate::{
+    config::Config, consumer::IntoMessageStream, error::JetStreamError, sink::JetStreamSink,
 };
 
-use crate::{error::JetStreamError, sink::JetStreamSink};
-
 mod ack;
+mod config;
+mod consumer;
 mod error;
 mod sink;
 
-pub type JetStreamTask<Args> = Task<Args, JetStreamContext, i64>;
-
-#[derive(Debug, Clone, Default)]
-pub struct Config {
-    pub stream: stream::Config,
-    pub consumer: jetstream::consumer::pull::Config,
-}
+pub type JetStreamTask<Args> = Task<Args, JetStreamContext, ulid::Ulid>;
 
 #[derive(Debug, Default, Clone)]
 pub struct JetStreamContext {
@@ -39,15 +40,15 @@ pub struct JetStreamContext {
     pub description: Option<String>,
 }
 
-pub struct NatsJetStream<Args, Codec> {
+pub struct NatsJetStream<Args, Codec, C> {
     _args: PhantomData<(Args, Codec)>,
     client: Client,
-    config: Config,
-    sink: JetStreamSink<Args, Codec>,
+    config: Config<C>,
+    sink: JetStreamSink<Args, Codec, C>,
 }
 
-impl<Args> NatsJetStream<Args, JsonCodec<Vec<u8>>> {
-    pub async fn new(client: Client, config: Config) -> Self {
+impl<Args, C: Clone> NatsJetStream<Args, JsonCodec<Vec<u8>>, C> {
+    pub async fn new(client: Client, config: Config<C>) -> Self {
         let context = jetstream::new(client.clone());
         context
             .get_or_create_stream(config.clone().stream)
@@ -62,7 +63,7 @@ impl<Args> NatsJetStream<Args, JsonCodec<Vec<u8>>> {
     }
 }
 
-impl<Args, Codec> Clone for NatsJetStream<Args, Codec> {
+impl<Args, Codec, C: Clone> Clone for NatsJetStream<Args, Codec, C> {
     fn clone(&self) -> Self {
         Self {
             _args: PhantomData,
@@ -73,71 +74,132 @@ impl<Args, Codec> Clone for NatsJetStream<Args, Codec> {
     }
 }
 
-impl<Args, C> Backend for NatsJetStream<Args, C>
+impl<Args, Decode, C, PollErr> Backend for NatsJetStream<Args, Decode, C>
 where
     Args: Send + Sync + 'static + Unpin,
-    C: Codec<Args, Compact = Vec<u8>> + Send + Sync + 'static,
-    C::Error: std::error::Error + Send + Sync + 'static,
+    Decode: Codec<Args, Compact = Vec<u8>> + Send + Sync + 'static,
+    Decode::Error: std::error::Error + Send + Sync + 'static,
+    C: Clone + IntoConsumerConfig + FromConsumer + Send + 'static,
+    Consumer<C>: IntoMessageStream<Error = PollErr>,
+    PollErr: Send + 'static,
 {
     type Args = Args;
 
     type Context = JetStreamContext;
 
-    type Beat = BoxStream<'static, Result<(), JetStreamError>>;
+    type Beat = BoxStream<'static, Result<(), JetStreamError<PollErr>>>;
 
-    type Error = JetStreamError;
+    type Error = JetStreamError<PollErr>;
 
-    type IdType = i64;
+    type IdType = ulid::Ulid;
 
     type Layer = AcknowledgeLayer<Self>;
 
-    type Stream = TaskStream<JetStreamTask<Args>, JetStreamError>;
+    type Stream = TaskStream<JetStreamTask<Args>, JetStreamError<PollErr>>;
 
     fn heartbeat(&self, _worker: &WorkerContext) -> Self::Beat {
-        Box::pin(futures::stream::pending())
+        let heartbeat = self.config.heartbeat;
+        stream::unfold(self.client.clone(), move |client| async move {
+            apalis_core::timer::sleep(heartbeat).await;
+            let res = client
+                .flush()
+                .await
+                .map_err(|e| JetStreamError::FlushError(e));
+            Some((res, client))
+        })
+        .boxed()
     }
 
     fn middleware(&self) -> Self::Layer {
         AcknowledgeLayer::new(self.clone())
     }
 
-    fn poll(self, worker: &WorkerContext) -> Self::Stream {
-        let worker = worker.clone();
+    fn poll(self, _worker: &WorkerContext) -> Self::Stream {
+        self.poll_general()
+            .map(|t| match t {
+                Ok(Some(task)) => Ok(Some(task.try_map(|task| {
+                    Decode::decode(&task).map_err(|e| JetStreamError::ParseError(e.into()))
+                })?)),
+                Ok(None) => Ok(None),
+                Err(e) => Err(e),
+            })
+            .boxed()
+    }
+}
+
+impl<Args, Decode, C, PollErr> BackendExt for NatsJetStream<Args, Decode, C>
+where
+    Args: Send + Sync + 'static + Unpin,
+    Decode: Codec<Args, Compact = Vec<u8>> + Send + Sync + 'static,
+    Decode::Error: std::error::Error + Send + Sync + 'static,
+    C: Clone + IntoConsumerConfig + FromConsumer + Send + 'static,
+    Consumer<C>: IntoMessageStream<Error = PollErr>,
+    PollErr: Send + 'static,
+{
+    type Codec = Decode;
+    type Compact = Vec<u8>;
+
+    type CompactStream = TaskStream<JetStreamTask<Self::Compact>, JetStreamError<PollErr>>;
+
+    fn get_queue(&self) -> Queue {
+        Queue::from(self.config.stream.name.as_str())
+    }
+
+    fn poll_compact(self, _worker: &WorkerContext) -> Self::CompactStream {
+        self.poll_general()
+    }
+}
+
+impl<Args, Decode, C, PollErr> NatsJetStream<Args, Decode, C>
+where
+    Args: Send + Sync + 'static + Unpin,
+    Decode: Codec<Args, Compact = Vec<u8>> + Send + Sync + 'static,
+    Decode::Error: std::error::Error + Send + Sync + 'static,
+    C: Clone + IntoConsumerConfig + FromConsumer + Send + 'static,
+    Consumer<C>: IntoMessageStream<Error = PollErr>,
+    PollErr: Send + 'static,
+{
+    pub fn poll_general(self) -> TaskStream<JetStreamTask<Vec<u8>>, JetStreamError<PollErr>> {
         let config = self.config;
         once(async move {
             let jetstream = jetstream::new(self.client);
-            let consumer: PullConsumer = jetstream
+            let consumer = jetstream
                 .create_stream(config.stream)
                 .await
                 .map_err(|e| JetStreamError::CreateStreamError(e))?
                 // Then, on that `Stream` use method to create Consumer and bind to it too.
-                .create_consumer(jetstream::consumer::pull::Config {
-                    durable_name: Some(worker.name().clone()),
-                    ..config.consumer
-                })
+                .create_consumer(config.consumer)
                 .await
                 .map_err(|e| JetStreamError::ConsumerError(e))?;
             let stream = consumer
-                .messages()
+                .into_messages()
                 .await
                 .map_err(|e| JetStreamError::StreamError(e))?
                 .map_err(|e| JetStreamError::PollError(e));
-            Ok::<_, JetStreamError>(stream)
+            Ok::<_, JetStreamError<PollErr>>(stream)
         })
         .try_flatten()
         .map(|message| match message {
             Ok(msg) => {
-                let args = C::decode(&(&msg.payload[..].to_vec()))
-                    .map_err(|e| JetStreamError::ParseError(e.into()))?;
+                let args = msg.payload[..].to_vec();
+                let mut task = Task::builder(args);
+                if let Some(headers) = &msg.headers {
+                    let task_id = headers
+                        .get(header::NATS_MESSAGE_ID)
+                        .and_then(|s| Ulid::from_string(s.as_str()).ok());
+                    if let Some(task_id) = task_id {
+                        task = task.with_task_id(TaskId::new(task_id));
+                    }
+                }
                 let ctx = JetStreamContext {
                     subject: Some(msg.subject.clone()),
                     reply: msg.reply.clone(),
-                    status: msg.status.clone(),
+                    status: msg.status,
                     headers: msg.headers.clone(),
                     description: msg.description.clone(),
                 };
-                let task = Task::builder(args).with_ctx(ctx).build();
-                Ok(Some(task))
+                task = task.with_ctx(ctx);
+                Ok(Some(task.build()))
             }
             Err(e) => Err(e),
         })
@@ -161,9 +223,12 @@ mod tests {
         // Create an unauthenticated connection to NATS.
         let client = async_nats::connect(nats_url).await.unwrap();
 
-        let mut config = Config::default();
-        config.stream.name = "messages".to_owned();
-        let mut backend = NatsJetStream::new(client, config).await;
+        let config = Config::new("push_messages")
+            .with_pull_consumer()
+            .durable()
+            .with_max_ack_pending(1);
+
+        let mut backend = NatsJetStream::new(client.clone(), config).await;
 
         backend.send(Task::new(HashMap::new())).await.unwrap();
 
@@ -171,7 +236,7 @@ mod tests {
             _: HashMap<String, String>,
             wrk: WorkerContext,
         ) -> Result<(), BoxDynError> {
-            tokio::time::sleep(Duration::from_secs(2)).await;
+            tokio::time::sleep(Duration::from_secs(5)).await;
             wrk.stop().unwrap();
             Ok(())
         }
@@ -180,5 +245,8 @@ mod tests {
             .backend(backend)
             .build(send_reminder);
         worker.run().await.unwrap();
+
+        // This ensures all pending messages are delivered
+        client.flush().await.unwrap();
     }
 }
