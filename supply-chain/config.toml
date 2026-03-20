@@ -161,7 +161,7 @@ version = "1.2.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.itoa]]
-version = "1.0.17"
+version = "1.0.18"
 criteria = "safe-to-deploy"
 
 [[exemptions.js-sys]]
@@ -597,11 +597,11 @@ version = "0.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy]]
-version = "0.8.46"
+version = "0.8.47"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy-derive]]
-version = "0.8.46"
+version = "0.8.47"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerofrom]]
