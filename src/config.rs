@@ -21,10 +21,6 @@ impl Config<()> {
     ///
     /// # Arguments
     /// - `namespace`: Logical name used for the stream.
-    ///
-    /// # Notes
-    /// In :contentReference[oaicite:0]{index=0}, a *stream* stores messages,
-    /// while a *consumer* defines how they are delivered.
     pub fn new(namespace: &str) -> Self {
         let mut stream = stream::Config {
             name: namespace.to_owned(),
