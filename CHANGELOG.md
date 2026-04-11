@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-rc.3]
+
+- bump: to v0.1.0-rc.3 [#17]
+
 ## [0.1.0-rc.2]
 
 - add: customizable consumer types [#11]
@@ -26,7 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.0-alpha.1]: https://github.com/apalis-dev/apalis-nats/releases/tag/v0.1.0-alpha.1
 [0.1.0-rc.1]: https://github.com/apalis-dev/apalis-nats/releases/tag/v0.1.0-rc.1
 [0.1.0-rc.2]: https://github.com/apalis-dev/apalis-nats/releases/tag/v0.1.0-rc.2
+[0.1.0-rc.3]: https://github.com/apalis-dev/apalis-nats/releases/tag/v0.1.0-rc.3
 [#1]: https://github.com/apalis-dev/apalis-nats/pull/1
 [#6]: https://github.com/apalis-dev/apalis-nats/pull/6
 [#11]: https://github.com/apalis-dev/apalis-nats/pull/11
+[#17]: https://github.com/apalis-dev/apalis-nats/pull/17
 
