@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-rc.4]
+
+- bump: to v0.1.0-rc.4 [#20]
+
 ## [0.1.0-rc.3]
 
 - bump: to v0.1.0-rc.3 [#17]
@@ -35,4 +39,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#6]: https://github.com/apalis-dev/apalis-nats/pull/6
 [#11]: https://github.com/apalis-dev/apalis-nats/pull/11
 [#17]: https://github.com/apalis-dev/apalis-nats/pull/17
-
+[#20]: https://github.com/apalis-dev/apalis-nats/pull/20
