@@ -9,15 +9,15 @@ version = "1.1.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.apalis]]
-version = "1.0.0-rc.7"
+version = "1.0.0-rc.9"
 criteria = "safe-to-run"
 
 [[exemptions.apalis-codec]]
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.apalis-core]]
-version = "1.0.0-rc.7"
+version = "1.0.0-rc.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-nats]]
@@ -29,7 +29,7 @@ version = "0.22.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.bitflags]]
-version = "2.11.0"
+version = "2.11.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.bumpalo]]
@@ -41,7 +41,7 @@ version = "1.11.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.60"
+version = "1.2.62"
 criteria = "safe-to-deploy"
 
 [[exemptions.cfg-if]]
@@ -157,7 +157,7 @@ version = "1.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.idna_adapter]]
-version = "1.2.1"
+version = "1.2.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.itoa]]
@@ -165,11 +165,11 @@ version = "1.0.18"
 criteria = "safe-to-deploy"
 
 [[exemptions.js-sys]]
-version = "0.3.95"
+version = "0.3.98"
 criteria = "safe-to-deploy"
 
 [[exemptions.libc]]
-version = "0.2.184"
+version = "0.2.186"
 criteria = "safe-to-deploy"
 
 [[exemptions.litemap]]
@@ -213,11 +213,11 @@ version = "2.3.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.pin-project]]
-version = "1.1.11"
+version = "1.1.12"
 criteria = "safe-to-deploy"
 
 [[exemptions.pin-project-internal]]
-version = "1.1.11"
+version = "1.1.12"
 criteria = "safe-to-deploy"
 
 [[exemptions.pin-project-lite]]
@@ -253,11 +253,11 @@ version = "5.3.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.rand]]
-version = "0.8.5"
+version = "0.8.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.rand]]
-version = "0.9.2"
+version = "0.9.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.rand_chacha]]
@@ -297,7 +297,7 @@ version = "0.17.14"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls]]
-version = "0.23.37"
+version = "0.23.40"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-native-certs]]
@@ -305,11 +305,11 @@ version = "0.8.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-pki-types]]
-version = "1.14.0"
+version = "1.14.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-webpki]]
-version = "0.103.11"
+version = "0.103.13"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustversion]]
@@ -429,7 +429,7 @@ version = "0.8.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio]]
-version = "1.51.1"
+version = "1.52.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-macros]]
@@ -501,23 +501,23 @@ version = "0.11.1+wasi-snapshot-preview1"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasip2]]
-version = "1.0.2+wasi-0.2.9"
+version = "1.0.3+wasi-0.2.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen]]
-version = "0.2.118"
+version = "0.2.121"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen-macro]]
-version = "0.2.118"
+version = "0.2.121"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen-macro-support]]
-version = "0.2.118"
+version = "0.2.121"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen-shared]]
-version = "0.2.118"
+version = "0.2.121"
 criteria = "safe-to-deploy"
 
 [[exemptions.web-time]]
@@ -573,7 +573,7 @@ version = "0.52.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.wit-bindgen]]
-version = "0.51.0"
+version = "0.57.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.writeable]]
