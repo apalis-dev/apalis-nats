@@ -1,6 +1,5 @@
 use apalis::prelude::*;
 use apalis_nats::*;
-use futures::{self, SinkExt};
 use std::collections::HashMap;
 use std::env;
 
@@ -14,9 +13,9 @@ async fn main() {
         .with_pull_consumer()
         .durable()
         .with_max_ack_pending(1);
-    let mut backend = NatsJetStream::new(client, config).await;
+    let mut backend = NatsJetStream::new(client).with_config(config);
 
-    backend.send(Task::new(HashMap::new())).await.unwrap();
+    backend.push(HashMap::new()).await.unwrap();
 
     async fn send_reminder(
         _: HashMap<String, String>,
