@@ -1,49 +1,63 @@
 use std::fmt::Debug;
 
-use apalis_core::{error::BoxDynError, task::Parts, worker::ext::ack::Acknowledge};
-use async_nats::{
-    Subject,
-    jetstream::consumer::{Consumer, IntoConsumerConfig},
+use apalis_core::{
+    error::{BoxDynError, RetryAfterError},
+    task::{ExecutionContext, status::Status},
+    worker::ext::ack::Acknowledge,
 };
+use async_nats::{Subject, jetstream::Context};
 use futures::{
     FutureExt,
     future::{self, BoxFuture},
 };
-use ulid::Ulid;
 
-use crate::{JetStreamContext, NatsJetStream, consumer::IntoMessageStream, error::JetStreamError};
+use crate::{NatsTaskContext, error::Error};
 
-impl<T, Decode, Res, C, PollErr> Acknowledge<Res, JetStreamContext, Ulid>
-    for NatsJetStream<T, Decode, C>
+#[derive(Debug, Clone)]
+pub struct NatsJetAck {
+    pub(crate) context: Context,
+}
+
+impl<Res> Acknowledge<Res> for NatsJetAck
 where
-    T: Send,
     Res: Debug + Send + Sync,
-    Decode: Send,
-    C: IntoConsumerConfig,
-    Consumer<C>: IntoMessageStream<Error = PollErr>,
-    PollErr: Send + 'static,
 {
-    type Error = JetStreamError<PollErr>;
+    type Error = Error;
 
     type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
-    fn ack(
-        &mut self,
-        res: &Result<Res, BoxDynError>,
-        parts: &Parts<JetStreamContext, Ulid>,
-    ) -> Self::Future {
-        let reply: Subject = parts.ctx.reply.clone().expect("Missing ack subject");
-        let client = self.client.clone();
-        if res.is_ok() {
-            let fut = async move {
-                client
-                    .publish(reply, "".into())
-                    .await
-                    .map_err(JetStreamError::AckError)?;
-                Ok(())
-            };
-            return fut.boxed();
+    fn ack(&mut self, res: &Result<Res, BoxDynError>, ctx: &ExecutionContext) -> Self::Future {
+        let reply: Subject = match ctx
+            .data()
+            .get::<NatsTaskContext>()
+            .and_then(|c| c.reply.clone())
+        {
+            Some(r) => r,
+            None => return future::ready(Ok(())).boxed(),
+        };
+        let context = self.context.clone();
+
+        let payload: Vec<u8> = match ctx.status() {
+            Status::Done => b"+ACK".to_vec(),
+            Status::Killed => b"+TERM".to_vec(),
+            Status::Failed => match res
+                .as_ref()
+                .err()
+                .and_then(|e| e.downcast_ref::<RetryAfterError>())
+            {
+                // Retry after the delay the handler asked for
+                Some(retry) => {
+                    format!(r#"-NAK {{"delay": {}}}"#, retry.get_duration().as_nanos()).into_bytes()
+                }
+                None => b"-NAK".to_vec(),
+            },
+            _ => unreachable!("Invalid Status"),
+        };
+
+        async move {
+            context.publish(reply, payload.into()).await?;
+            Ok(())
         }
-        future::ready(Ok(())).boxed()
+        .boxed()
     }
 }
