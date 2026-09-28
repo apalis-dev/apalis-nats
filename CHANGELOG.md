@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- deps(deps): bump tokio from 1.52.3 to 1.53.1 ([#33](https://github.com/apalis-dev/apalis-nats/pull/33))
 ## [0.1.0-rc.4]
 
 - bump: to v0.1.0-rc.4 [#20]
