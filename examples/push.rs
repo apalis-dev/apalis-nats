@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 use apalis::prelude::*;
 use apalis_nats::*;
 use std::collections::HashMap;
