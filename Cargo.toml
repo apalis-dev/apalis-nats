@@ -1,6 +1,6 @@
 [package]
 name = "apalis-nats"
-version = "0.1.0-rc.5"
+version = "0.1.0"
 edition = "2024"
 authors = ["Njuguna Mureithi <mureithinjuguna@gmail.com>"]
 repository = "https://github.com/apalis-dev/apalis-nats"
@@ -13,11 +13,11 @@ keywords = ["apalis", "nats", "messages", "queue", "worker"]
 categories = ["asynchronous", "database", "network-programming"]
 
 [dependencies]
-apalis-core = { version = "1.0.0-rc.10", default-features = false, features = [
+apalis-core = { version = "1.0.0-rc.11", default-features = false, features = [
     "sleep",
     "ulid",
 ] }
-apalis-codec = { version = "0.1.0-rc.10", default-features = false, features = [
+apalis-codec = { version = "0.1.0-rc.11", default-features = false, features = [
     "json",
 ] }
 async-nats = { version = "0.50.0", features = [
@@ -32,8 +32,8 @@ tracing = "0.1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-apalis = "1.0.0-rc.10"
-apalis-workflow = { version = "0.1.0-rc.10" }
+apalis = "1.0.0-rc.11"
+apalis-workflow = { version = "0.1.0-rc.11" }
 
 
 [lints.rust]

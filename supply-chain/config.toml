@@ -9,19 +9,19 @@ version = "1.1.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.apalis]]
-version = "1.0.0-rc.10"
+version = "1.0.0-rc.11"
 criteria = "safe-to-run"
 
 [[exemptions.apalis-codec]]
-version = "0.1.0-rc.10"
+version = "0.1.0-rc.11"
 criteria = "safe-to-deploy"
 
 [[exemptions.apalis-core]]
-version = "1.0.0-rc.10"
+version = "1.0.0-rc.11"
 criteria = "safe-to-deploy"
 
 [[exemptions.apalis-workflow]]
-version = "0.1.0-rc.10"
+version = "0.1.0-rc.11"
 criteria = "safe-to-run"
 
 [[exemptions.async-nats]]
@@ -45,7 +45,7 @@ version = "1.12.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.5.1"
+version = "1.6.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.cfg-if]]
@@ -217,7 +217,7 @@ version = "0.3.106"
 criteria = "safe-to-deploy"
 
 [[exemptions.libc]]
-version = "0.2.189"
+version = "0.2.190"
 criteria = "safe-to-deploy"
 
 [[exemptions.litemap]]
@@ -233,7 +233,7 @@ version = "2.8.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.mio]]
-version = "1.2.3"
+version = "1.2.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.num-conv]]
@@ -285,7 +285,7 @@ version = "0.1.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.powerfmt]]
-version = "0.2.0"
+version = "0.2.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.proc-macro2]]
@@ -461,7 +461,7 @@ version = "0.8.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio]]
-version = "1.53.1"
+version = "1.53.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-macros]]
@@ -529,7 +529,7 @@ version = "1.0.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.uuid]]
-version = "1.26.1"
+version = "1.27.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasi]]
@@ -613,7 +613,7 @@ version = "0.8.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.yoke-derive]]
-version = "0.8.3"
+version = "0.8.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerofrom]]
@@ -625,7 +625,7 @@ version = "0.1.8"
 criteria = "safe-to-deploy"
 
 [[exemptions.zeroize]]
-version = "1.9.0"
+version = "1.9.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerotrie]]
