@@ -17,7 +17,7 @@ apalis-core = { version = "1.0.0-rc.11", default-features = false, features = [
     "sleep",
     "ulid",
 ] }
-apalis-codec = { version = "0.1.0-rc.11", default-features = false, features = [
+apalis-codec = { version = "1.0.0", default-features = false, features = [
     "json",
 ] }
 async-nats = { version = "0.50.0", features = [
