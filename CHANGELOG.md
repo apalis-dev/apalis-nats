@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- deps(deps): bump async-nats from 0.50.0 to 0.51.0 ([#45](https://github.com/apalis-dev/apalis-nats/pull/45))
 ## [0.1.0]
 
 - bump: to v0.1.0
