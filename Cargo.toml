@@ -13,14 +13,14 @@ keywords = ["apalis", "nats", "messages", "queue", "worker"]
 categories = ["asynchronous", "database", "network-programming"]
 
 [dependencies]
-apalis-core = { version = "1.0.0-rc.11", default-features = false, features = [
+apalis-core = { version = "1.1.1", default-features = false, features = [
     "sleep",
     "ulid",
 ] }
-apalis-codec = { version = "0.1.0-rc.11", default-features = false, features = [
+apalis-codec = { version = "1.1.1", default-features = false, features = [
     "json",
 ] }
-async-nats = { version = "0.50.0", features = [
+async-nats = { version = "0.52.0", features = [
     "jetstream",
     "server_2_12",
 ], default-features = false }
@@ -32,8 +32,8 @@ tracing = "0.1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-apalis = "1.0.0-rc.11"
-apalis-workflow = { version = "0.1.0-rc.11" }
+apalis = "1.1.1"
+apalis-workflow = { version = "1.1.1" }
 
 
 [lints.rust]
