@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- chore: add auto-release and auto-changelog scripts ([#46](https://github.com/apalis-dev/apalis-nats/pull/46))
+
 ## [0.1.0]
 
 - bump: to v0.1.0

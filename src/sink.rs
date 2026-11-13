@@ -1,6 +1,6 @@
 use apalis_core::backend::future::BoxSyncFuture;
 use async_nats::{
-    HeaderMap,
+    HeaderMap, HeaderValue,
     jetstream::{
         consumer::{Consumer, FromConsumer, IntoConsumerConfig},
         message::PublishMessage,
@@ -12,6 +12,7 @@ use std::{
     collections::VecDeque,
     marker::PhantomData,
     pin::Pin,
+    str::FromStr,
     task::{Context, Poll},
 };
 use ulid::Ulid;
@@ -152,11 +153,12 @@ where
         while let Some(item) = this.sink.items.pop_front() {
             let queue_name = this.config.stream.name.clone();
 
-            let mut headers = HeaderMap::from_iter(
-                item.metadata()
-                    .iter()
-                    .map(|(k, v)| (k.as_str().try_into().unwrap(), v.as_str().into())),
-            );
+            let mut headers = HeaderMap::from_iter(item.metadata().iter().map(|(k, v)| {
+                (
+                    k.as_str().try_into().unwrap(),
+                    HeaderValue::from_str(v.as_str()).unwrap(),
+                )
+            }));
 
             let task_id = item
                 .task_id()
