@@ -20,7 +20,7 @@ apalis-core = { version = "1.1.1", default-features = false, features = [
 apalis-codec = { version = "1.1.1", default-features = false, features = [
     "json",
 ] }
-async-nats = { version = "0.52.0", features = [
+async-nats = { version = "0.53.0", features = [
     "jetstream",
     "server_2_12",
 ], default-features = false }
