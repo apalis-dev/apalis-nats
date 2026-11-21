@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- *deps(deps)*: bump apalis-core from 1.1.1 to 1.2.0 ([#49](https://github.com/apalis-dev/apalis-nats/pull/49))
 ## [0.2.0](https://github.com/apalis-dev/apalis-nats/releases/tag/v0.2.0)
 
 - chore: add auto-release and auto-changelog scripts ([#46](https://github.com/apalis-dev/apalis-nats/pull/46))
