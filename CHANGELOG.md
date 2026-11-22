@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/apalis-dev/apalis-nats/releases/tag/v0.3.0)
+
 - *deps(deps)*: bump apalis-codec from 1.1.1 to 1.2.0 ([#48](https://github.com/apalis-dev/apalis-nats/pull/48))
 ## [0.2.0](https://github.com/apalis-dev/apalis-nats/releases/tag/v0.2.0)
 
